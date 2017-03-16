@@ -1,0 +1,30 @@
+close
+clear
+clc
+
+lb_kg=.45;                    %Pound to kilo
+
+GW=4230/lb_kg;                %lb
+
+Cn_max=sqrt(Cl_max^2+Cd_at_cl_max^2);    %Normal force coefficient
+% Cn_max=1.1*Cl_max;
+Cn_max_neg=sqrt(Cl_max_neg^2+Cd_at_cl_max_neg^2);
+%Cn_max_neg=1.1*Cl_max;
+
+% Kc=33;                    %W/S<20 psf
+Kc=-.05*(GW/S);             %20<W/S<100
+
+n_lim_pos=2.1*24000/(GW+10000); %No need to be greater than 3.8
+n_lim_neg=-.4*n_lim_pos;        %Normal and utility
+% n_lim_neg=-.5*n_lim_pos;      %Acrobatic
+
+Vs=(2*GW/S)/(rho*Cn_max);   %Stall speed
+Vs_neg=(2*GW/S)/(rho*Cn_max_neg);
+Vc=Kc*sqrt(MTOW_S);         %Cruise speed
+Va=Vs*n_lim_pos;            %Maneuvering speed
+Vd=1.25*Vc;                 %Dive speed
+
+%Gust loads
+nu_g=2*(GW/S)/(rho*CMA*g*Cl_alpha);
+Kg=.88*nu_g/(5.3+nu_g);
+n_gust=1+(Kg*Ude*V*Cl_alpha)/(498*(Gw/S));     %
