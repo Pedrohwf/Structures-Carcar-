@@ -3,28 +3,69 @@ clear
 clc
 
 lb_kg=.45;                    %Pound to kilo
-
+S=150;                         %Wing area
 GW=4230/lb_kg;                %lb
+h=42000;                      %Cruise altitude
+rho=4.27;                     %30000ft density
+Cl_max=1.1;                   %Cl max
+Cl_alpha=1;                   %Cl alpha
+CMA=6;                        %Medium aerodynamic chord (ft)
+g=32.2;                         %gravity(ft/s2)
 
-Cn_max=sqrt(Cl_max^2+Cd_at_cl_max^2);    %Normal force coefficient
-% Cn_max=1.1*Cl_max;
-Cn_max_neg=sqrt(Cl_max_neg^2+Cd_at_cl_max_neg^2);
-%Cn_max_neg=1.1*Cl_max;
+i=1;
+
+for V=0:200
+% Cn_max=sqrt(Cl_max^2+Cd_at_cl_max^2);    %Normal force coefficient
+Cn_max=1.1*Cl_max;
+% Cn_max_neg=sqrt(Cl_max_neg^2+Cd_at_cl_max_neg^2);
+Cn_max_neg=1.1*Cl_max;
+
+%Load factors
+n=rho*S*Cn_max*V^2/2;
 
 % Kc=33;                    %W/S<20 psf
-Kc=-.05*(GW/S);             %20<W/S<100
+Kc=33-.055*(GW/S);             %20<W/S<100
 
 n_lim_pos=2.1*24000/(GW+10000); %No need to be greater than 3.8
 n_lim_neg=-.4*n_lim_pos;        %Normal and utility
 % n_lim_neg=-.5*n_lim_pos;      %Acrobatic
-
 Vs=(2*GW/S)/(rho*Cn_max);   %Stall speed
 Vs_neg=(2*GW/S)/(rho*Cn_max_neg);
-Vc=Kc*sqrt(MTOW_S);         %Cruise speed
-Va=Vs*n_lim_pos;            %Maneuvering speed
+Vc=Kc*sqrt(GW/S);         %Cruise speed
+Va=Vs*n_lim_pos^2;          %Maneuvering speed
 Vd=1.25*Vc;                 %Dive speed
 
 %Gust loads
 nu_g=2*(GW/S)/(rho*CMA*g*Cl_alpha);
 Kg=.88*nu_g/(5.3+nu_g);
-n_gust=1+(Kg*Ude*V*Cl_alpha)/(498*(Gw/S));     %
+
+% Vc
+% Ude_vc=50;                   %Between SL and 20000ft
+Ude_vc=66.67-.000833*h;        %Between 20000 and 50000ft
+n_gust_vc(i)=1+(Kg*Ude_vc*V*Cl_alpha)/(498*(GW/S));
+
+% Vd
+Ude_vd=33.74-.000471*h;
+n_gust_vd(i)=1+(Kg*Ude_vd*V*Cl_alpha)/(498*(GW/S));
+
+if n>=n_lim_pos
+    n=n_lim_pos;
+end
+
+if V>=Vc
+    n_vc=1+(Kg*Ude_vc*Vc*Cl_alpha)/(498*(GW/S));
+    n_vd=1+(Kg*Ude_vd*Vd*Cl_alpha)/(498*(GW/S));
+    n_gust_vc(i)=(n_vd-n_vc)/(Vd-Vc);
+end
+
+v(i)=V;
+
+if V>Va
+    N(i)=max([n n_lim_pos n_gust_vc(i) n_gust_vd(i)]);
+else
+    N(i)=n;
+end
+i=i+1;
+end
+
+plot(v,N)
