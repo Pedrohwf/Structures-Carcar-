@@ -1,0 +1,159 @@
+%% QUESTÃO (D) 
+
+clc
+clear all
+close all
+
+% Dados fornecidos pelo exercício:
+g=9.8;
+m=4230;                   % MTOW
+W=m*g;
+S=23.9; 
+H=0*.3048;                % Altitude 
+V_c=225*0.514;            % Velocidade de cruzeiro (TAS)
+% V_c=convert(V_c,H);     % Velocidade de cruzeiro (EAS)
+V_c=379;
+V_D=V_c*1.25;               % Velocidade de mergulho (TAS)
+% V_D=convert(V_D,H);       % Velocidade de mergulho (EAS)
+% rho=atmosferaISA(H);      % Densidade
+rho=1.223;
+nz_max=3.8;               % Fator de carga limite positivo
+nz_min=-.4*nz_max;        % Fator de carga limite negativo
+g=9.8065;
+
+% Flapes recolhidos:
+CD0=0.037;                % Coeficiente de arrasto parasita               
+e=0.9;                    % Fator de Oswald
+AR = 16.9;                % Aspect Ratio
+k=1/(pi*e*AR);            
+CLmax=1.2;                % Máximo coeficiente de sustentação
+CLmin=-1;                 % Mínimo coeficiente de sustentação
+Cl_alpha=1.6*pi;
+CMA=1.1;
+
+% 1- PRIMEIRA PARTE DO DIAGRAMA - LIMITANTE É O ESTOL
+
+% FRONTEIRA ESQUERDA - LIMITADA PELA VELOCIDADE DE ESTOL
+
+% PARTE POSITIVA 
+
+figure
+
+nz=0:0.01:nz_max;
+V_pos=sqrt((2*nz*W)./(rho*S*CLmax));
+
+plot(V_pos,0:0.01:nz_max,'b','LineWidth',1)
+hold on
+
+% PARTE NEGATIVA
+
+nz=0:-0.01:nz_min;
+V_neg=sqrt((2*nz*W)./(rho*S*CLmin));
+
+plot(V_neg,0:-0.01:nz_min,'b','LineWidth',1)
+hold on
+
+% 2- SEGUNDA PARTE DO DIAGRAMA - FRONTEIRAS SUPERIOR E INFERIOR
+
+plot([V_pos(length(V_pos)) V_c],[nz_max nz_max],'b','LineWidth',1)
+hold on
+
+plot([V_c V_neg(length(V_neg))],[nz_min nz_min],'b','LineWidth',1)
+hold on
+
+% 3- TERCEIRA PARTE DO DIAGRAMA - A PARTIR DA VELOCIDADE DE CRUZEIRO ATÉ A
+% VELOCIDADE DE MERGULHO
+
+plot([V_c V_D],[nz_max nz_max],'b','LineWidth',1)
+hold on
+
+plot([V_c V_D],[nz_min 0],'b','LineWidth',1)
+hold on
+
+% 4- QUARTA PARTE DO DIAGRAMA - FRONTEIRA DIREIRA - LIMITADA PELA VELOCIDADE DE MERGULHO
+
+plot([V_D V_D],[nz_max 0],'b','LineWidth',1)
+hold on
+
+%---------------------------------------------------------------------------------------------------------
+
+% HEAVY WEIGHT
+nz_max=2;               % Fator de carga limite positivo
+nz_min=-.4*nz_max;        % Fator de carga limite negativo
+
+% 1- PRIMEIRA PARTE DO DIAGRAMA - LIMITANTE É O ESTOL
+
+% FRONTEIRA ESQUERDA - LIMITADA PELA VELOCIDADE DE ESTOL
+
+% PARTE POSITIVA 
+
+nz=0:0.01:nz_max;
+V_pos=sqrt((2*nz*W)./(rho*S*CLmax));
+
+plot(V_pos,0:0.01:nz_max,'r','LineWidth',1)
+hold on
+
+% PARTE NEGATIVA
+
+nz=0:-0.01:nz_min;
+V_neg=sqrt((2*nz*W)./(rho*S*CLmin));
+
+plot(V_neg,0:-0.01:nz_min,'r','LineWidth',1)
+hold on
+
+% 2- SEGUNDA PARTE DO DIAGRAMA - FRONTEIRAS SUPERIOR E INFERIOR
+
+plot([V_pos(length(V_pos)) V_c],[nz_max nz_max],'r','LineWidth',1)
+hold on
+
+plot([V_c V_neg(length(V_neg))],[nz_min nz_min],'r','LineWidth',1)
+hold on
+
+% 3- TERCEIRA PARTE DO DIAGRAMA - A PARTIR DA VELOCIDADE DE CRUZEIRO ATÉ A
+% VELOCIDADE DE MERGULHO
+
+plot([V_c V_D],[nz_max nz_max],'r','LineWidth',1)
+hold on
+
+plot([V_c V_D],[nz_min 0],'r','LineWidth',1)
+hold on
+
+% 4- QUARTA PARTE DO DIAGRAMA - FRONTEIRA DIREITA - LIMITADA PELA VELOCIDADE DE MERGULHO
+
+plot([V_D V_D],[nz_max 0],'r','LineWidth',1)
+hold on
+
+title('V-n Diagram');
+xlabel('Speed [m/s]');
+ylabel('Load factor, nz');
+grid on
+
+
+%------------------------------------------------------------------------------------------------
+
+% DIAGRAMA DE RAJADA
+
+% Cl_alpha=pi;
+% S=530;
+% h=35000;
+% CMA=3.8*.3048;
+V=0:0.01:V_D;
+
+
+% %Gust loads factors
+nu_g=2*(W/S)/(rho*CMA*g*Cl_alpha);
+Kg=.88*nu_g/(5.3+nu_g);
+
+% Vc
+Ude_vc=50*.3048;                   %Between SL and 20000ft
+% Ude_vc=66.67-.000833*H;        %Between 20000 and 50000ft
+n_gust_vc_pos=1+(Kg*Ude_vc*V*Cl_alpha)/(498*(W/S));
+n_gust_vc_neg=1-(Kg*Ude_vc*V*Cl_alpha)/(498*(W/S));
+
+% Vd
+Ude_vd=33.74-.000471*H;
+n_gust_vd_pos=1+(Kg*Ude_vd*V*Cl_alpha)/(498*(W/S));
+n_gust_vd_neg=1-(Kg*Ude_vd*V*Cl_alpha)/(498*(W/S));
+
+plot(V,n_gust_vc_pos,'g--',V,n_gust_vc_neg,'g--')
+hold off
